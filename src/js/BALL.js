@@ -43,11 +43,48 @@ class Ball {
    * checks if the ball collided with the wall/ boundary of the container
    */
   collisionWithWall() {
-    if (this.x > VIEWBOX_WIDTH - this.diameter || this.x < 0) {
+    //prevents the ball from going out of box and pulls it in if it has gone out
+    if (this.x > VIEWBOX_WIDTH - this.diameter) {
+      this.x = VIEWBOX_WIDTH - this.diameter;
       this.dx = -this.dx;
     }
-    if (this.y > VIEWBOX_HEIGHT - this.diameter || this.y < 0) {
+    //same but for when ball goes beyond left boundary
+    if (this.x < 0) {
+      this.x = 0;
+      this.dx = -this.dx;
+    }
+    //same but for max height
+    if (this.y > VIEWBOX_HEIGHT - this.diameter) {
+      this.y = VIEWBOX_HEIGHT - this.diameter;
       this.dy = -this.dy;
+    }
+
+    //same but for when ball goes beyond upper boundary
+    if (this.y < 0) {
+      this.y = 0;
+      this.dy = -this.dy;
+    }
+  }
+
+  /**
+   * Checks if two balls overlap and resolves the overlap
+   */
+  resolveOverlap(ball, otherball) {
+    const distance = distanceCalculator(
+      ball.x,
+      ball.y,
+      otherball.x,
+      otherball.y
+    );
+    const overlap = ball.radius + otherball.radius - distance + 1;
+
+    if (overlap > 0) {
+      const angle = Math.atan2(otherball.y - ball.y, otherball.x - ball.x);
+      const overlapX = overlap * Math.cos(angle);
+      const overlapY = overlap * Math.sin(angle);
+
+      ball.x -= overlapX;
+      ball.y -= overlapY;
     }
   }
 
@@ -55,18 +92,10 @@ class Ball {
    * checks if the ball collided with another ball
    */
   collisionWithBall(ball, otherball) {
-    const distance = distanceCalculator(
-      ball.x,
-      ball.y,
-      otherball.x,
-      otherball.y
-    );
-    const radiiSum = ball.radius + otherball.radius;
-    if (distance <= radiiSum) {
-      ball.dx = -ball.dx;
-      ball.dx = -ball.dy;
-      otherball.dx = -otherball.dx;
-      otherball.dy = -otherball.dy;
-    }
+    this.resolveOverlap(ball, otherball);
+    ball.dx = -ball.dx;
+    ball.dx = -ball.dy;
+    otherball.dx = -otherball.dx;
+    otherball.dy = -otherball.dy;
   }
 }
